@@ -1,24 +1,12 @@
 "use client";
 
-import { FormEvent, useState } from "react";
-
-type AuthUser = {
-  id: string;
-  email: string;
-  baseRole: "student" | "faculty" | "admin";
-  status: "active" | "suspended" | "deleted";
-  roles: Array<{
-    name: string;
-    scopeType: "class" | "department" | "year" | null;
-    scopeId: string | null;
-  }>;
-};
-
-type LoginApiResponse = {
-  message?: string;
-  error?: string;
-  user?: AuthUser;
-};
+import { FormEvent, useState, useEffect, useRef } from "react";
+import { gsap } from "gsap";
+import { BrandHeader } from "./components/login/BrandHeader";
+import { LoginFooter } from "./components/login/LoginFooter";
+import { LoginForm } from "./components/login/LoginForm";
+import { SessionPanel } from "./components/login/SessionPanel";
+import { AuthUser, LoginApiResponse } from "./components/login/types";
 
 export default function Home() {
   const [email, setEmail] = useState("admin.erp@nitgoa.ac.in");
@@ -26,6 +14,36 @@ export default function Home() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+
+  const containerRef = useRef<HTMLElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+  const elementsRef = useRef<(HTMLElement | null)[]>([]);
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.fromTo(
+        containerRef.current,
+        { opacity: 0, y: 30 },
+        { opacity: 1, y: 0, duration: 0.8, ease: "power3.out" },
+      );
+
+      gsap.fromTo(
+        elementsRef.current,
+        { opacity: 0, y: 15 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.5,
+          stagger: 0.1,
+          ease: "power2.out",
+          delay: 0.2,
+        },
+      );
+    });
+
+    return () => ctx.revert();
+  }, []);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -36,94 +54,123 @@ export default function Home() {
     try {
       const response = await fetch("/api/auth/login", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
 
       const payload = (await response.json()) as LoginApiResponse;
 
       if (!response.ok) {
-        setErrorMessage(payload.error ?? "Login failed.");
+        setErrorMessage(payload.error ?? "Authentication failed.");
+        gsap.fromTo(
+          formRef.current,
+          { x: -8 },
+          {
+            x: 8,
+            duration: 0.05,
+            yoyo: true,
+            repeat: 5,
+            onComplete: () => {
+              gsap.set(formRef.current, { x: 0 });
+            },
+          },
+        );
         return;
       }
 
       if (!payload.user) {
-        setErrorMessage("Login did not return a user payload.");
+        setErrorMessage("Authentication did not return a valid session.");
         return;
       }
 
       setUser(payload.user);
     } catch {
-      setErrorMessage("Request failed. Please check if the server is running.");
+      setErrorMessage("System unreachable. Please verify network routing.");
+      gsap.fromTo(
+        formRef.current,
+        { x: -8 },
+        {
+          x: 8,
+          duration: 0.05,
+          yoyo: true,
+          repeat: 5,
+          onComplete: () => {
+            gsap.set(formRef.current, { x: 0 });
+          },
+        },
+      );
     } finally {
       setIsSubmitting(false);
     }
   }
 
   return (
-    <main className="mx-auto min-h-screen w-full max-w-3xl px-6 py-12">
-      <section className="rounded-xl border border-black/10 bg-white p-6 shadow-sm">
-        <h1 className="text-2xl font-bold text-zinc-900">Student ERP Login</h1>
-        <p className="mt-2 text-sm text-zinc-600">
-          On successful login, authenticated user details are shown below as JSON.
-        </p>
+    <main className="relative flex min-h-dvh w-full flex-col items-center justify-center bg-[#F4F4F5] px-6 text-[#1E293B] font-sans antialiased overflow-hidden">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(10,17,40,0.07),transparent_45%),radial-gradient(circle_at_85%_15%,rgba(217,72,56,0.06),transparent_42%),linear-gradient(145deg,#F8FAFC_0%,#EEF2F7_100%)]"></div>
+      <div className="pointer-events-none absolute -left-24 top-16 h-72 w-72 rounded-full bg-[#0A1128]/10 blur-3xl animate-[floatSoft_16s_ease-in-out_infinite]"></div>
+      <div className="pointer-events-none absolute -right-24 bottom-12 h-80 w-80 rounded-full bg-[#D94838]/10 blur-3xl animate-[floatSoft_20s_ease-in-out_infinite_reverse]"></div>
+      <div className="pointer-events-none absolute inset-0 opacity-[0.035] bg-[linear-gradient(to_right,#0f172a_1px,transparent_1px),linear-gradient(to_bottom,#0f172a_1px,transparent_1px)] bg-size-[44px_44px]"></div>
+      <div className="pointer-events-none absolute inset-0 mix-blend-overlay opacity-20 bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"></div>
 
-        <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
-          <div>
-            <label className="mb-1 block text-sm font-medium text-zinc-700" htmlFor="email">
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              className="w-full rounded-md border border-zinc-300 px-3 py-2 text-zinc-900 outline-none focus:border-zinc-500"
-              required
-            />
-          </div>
+      <section
+        ref={containerRef}
+        className="relative z-10 w-full max-w-sm sm:max-w-md rounded-sm bg-white p-10 shadow-2xl shadow-[#0A1128]/5 border border-black/5"
+      >
+        <BrandHeader
+          onRegisterElement={(element) => {
+            elementsRef.current[0] = element;
+          }}
+        />
 
-          <div>
-            <label className="mb-1 block text-sm font-medium text-zinc-700" htmlFor="password">
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              className="w-full rounded-md border border-zinc-300 px-3 py-2 text-zinc-900 outline-none focus:border-zinc-500"
-              required
-            />
-          </div>
+        {user ? (
+          <SessionPanel user={user} />
+        ) : (
+          <LoginForm
+            email={email}
+            password={password}
+            isSubmitting={isSubmitting}
+            showPassword={showPassword}
+            errorMessage={errorMessage}
+            formRef={formRef}
+            onSubmit={handleSubmit}
+            onEmailChange={(event) => setEmail(event.target.value)}
+            onPasswordChange={(event) => setPassword(event.target.value)}
+            onTogglePassword={() => setShowPassword((prev) => !prev)}
+            onRegisterEmailField={(element) => {
+              elementsRef.current[1] = element;
+            }}
+            onRegisterPasswordField={(element) => {
+              elementsRef.current[2] = element;
+            }}
+            onRegisterSubmitButton={(element) => {
+              elementsRef.current[3] = element;
+            }}
+          />
+        )}
 
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="inline-flex rounded-md bg-zinc-900 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {isSubmitting ? "Logging in..." : "Login"}
-          </button>
-        </form>
+        <LoginFooter
+          onRegisterElement={(element) => {
+            elementsRef.current[4] = element;
+          }}
+        />
       </section>
 
-      {errorMessage ? (
-        <section className="mt-6 rounded-xl border border-red-300 bg-red-50 p-4 text-red-800">
-          <p className="font-semibold">Login failed</p>
-          <p className="mt-1 text-sm">{errorMessage}</p>
-        </section>
-      ) : null}
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap');
 
-      {user ? (
-        <section className="mt-6 rounded-xl border border-emerald-300 bg-emerald-50 p-4">
-          <p className="font-semibold text-emerald-900">Login successful</p>
-          <pre className="mt-3 overflow-auto rounded-md bg-zinc-900 p-4 text-xs text-zinc-100">
-            {JSON.stringify(user, null, 2)}
-          </pre>
-        </section>
-      ) : null}
+        @keyframes floatSoft {
+          0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+          50% { transform: translate3d(0, -14px, 0) scale(1.03); }
+        }
+        
+        @keyframes shimmer {
+          100% { transform: translateX(100%); }
+        }
+      `,
+        }}
+      />
     </main>
   );
 }
