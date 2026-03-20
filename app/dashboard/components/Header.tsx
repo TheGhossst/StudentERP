@@ -6,9 +6,10 @@ import { useRouter } from "next/navigation";
 interface HeaderProps {
     name: string;
     role: string;
+    unreadCount?: number;
 }
 
-export default function Header({ name, role }: HeaderProps) {
+export default function Header({ name, role, unreadCount = 0 }: HeaderProps) {
     const router = useRouter();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -53,8 +54,12 @@ export default function Header({ name, role }: HeaderProps) {
 
             <div className="flex items-center gap-4 sm:gap-6">
                 
-                <button className="relative text-slate-100 transition-colors hover:text-slate-400 focus:outline-none">
-                    <span className="absolute right-0 top-0 block h-2 w-2 rounded-full bg-rose-500 ring-2 ring-white"></span>
+                <button className="relative text-slate-100 transition-colors hover:text-slate-400 focus:outline-none" aria-label="Notifications">
+                    {unreadCount > 0 ? (
+                        <span className="absolute -right-2 -top-2 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-semibold leading-none text-white ring-2 ring-slate-900">
+                            {unreadCount > 99 ? "99+" : unreadCount}
+                        </span>
+                    ) : null}
                     <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
                     </svg>

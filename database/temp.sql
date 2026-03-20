@@ -29,3 +29,6 @@ select * from faculty;
 select count(distinct(password_hash)) from users ;
 
 SELECT COUNT(*) FROM login_attempts;
+
+SELECT * FROM notifications;
+SELECT * FROM notification_targets;
