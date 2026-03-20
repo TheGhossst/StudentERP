@@ -1,19 +1,19 @@
 "use client";
 
 import { FormEvent, useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { gsap } from "gsap";
 import { BrandHeader } from "./components/login/BrandHeader";
 import { LoginFooter } from "./components/login/LoginFooter";
 import { LoginForm } from "./components/login/LoginForm";
-import { SessionPanel } from "./components/login/SessionPanel";
-import { AuthUser, LoginApiResponse } from "./components/login/types";
+import { LoginApiResponse } from "./components/login/types";
 
 export default function Home() {
+  const router = useRouter();
   const [email, setEmail] = useState("admin.erp@nitgoa.ac.in");
   const [password, setPassword] = useState("NitGoa@123");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [user, setUser] = useState<AuthUser | null>(null);
   const [showPassword, setShowPassword] = useState(false);
 
   const containerRef = useRef<HTMLElement>(null);
@@ -49,7 +49,6 @@ export default function Home() {
     event.preventDefault();
     setIsSubmitting(true);
     setErrorMessage(null);
-    setUser(null);
 
     try {
       const response = await fetch("/api/auth/login", {
@@ -83,7 +82,7 @@ export default function Home() {
         return;
       }
 
-      setUser(payload.user);
+      router.push("/dashboard");
     } catch {
       setErrorMessage("System unreachable. Please verify network routing.");
       gsap.fromTo(
@@ -105,16 +104,16 @@ export default function Home() {
   }
 
   return (
-    <main className="relative flex min-h-dvh w-full flex-col items-center justify-center bg-[#F4F4F5] px-6 text-[#1E293B] font-sans antialiased overflow-hidden">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(10,17,40,0.07),transparent_45%),radial-gradient(circle_at_85%_15%,rgba(217,72,56,0.06),transparent_42%),linear-gradient(145deg,#F8FAFC_0%,#EEF2F7_100%)]"></div>
-      <div className="pointer-events-none absolute -left-24 top-16 h-72 w-72 rounded-full bg-[#0A1128]/10 blur-3xl animate-[floatSoft_16s_ease-in-out_infinite]"></div>
+    <main className="relative flex min-h-dvh w-full flex-col items-center justify-center text-[#F4F4F5] px-6 bg-[#1E293B] font-sans antialiased overflow-hidden">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(212, 213, 215, 0.07),transparent_45%),radial-gradient(circle_at_85%_15%,rgba(229, 221, 221, 0.06),transparent_42%),linear-gradient(145deg,#363839_0%,#EEF2F7_100%)]"></div>
+      <div className="pointer-events-none absolute -left-24 top-16 h-72 w-72 rounded-full bg-[#d9d9de]/10 blur-3xl animate-[floatSoft_16s_ease-in-out_infinite]"></div>
       <div className="pointer-events-none absolute -right-24 bottom-12 h-80 w-80 rounded-full bg-[#D94838]/10 blur-3xl animate-[floatSoft_20s_ease-in-out_infinite_reverse]"></div>
-      <div className="pointer-events-none absolute inset-0 opacity-[0.035] bg-[linear-gradient(to_right,#0f172a_1px,transparent_1px),linear-gradient(to_bottom,#0f172a_1px,transparent_1px)] bg-size-[44px_44px]"></div>
+      <div className="pointer-events-none absolute inset-0 opacity-[0.035] bg-[linear-gradient(to_right,#dbdcde_1px,transparent_1px),linear-gradient(to_bottom,#d6d7d9_1px,transparent_1px)] bg-size-[44px_44px]"></div>
       <div className="pointer-events-none absolute inset-0 mix-blend-overlay opacity-20 bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"></div>
 
       <section
         ref={containerRef}
-        className="relative z-10 w-full max-w-sm sm:max-w-md rounded-sm bg-white p-10 shadow-2xl shadow-[#0A1128]/5 border border-black/5"
+        className="relative z-10 w-full max-w-sm sm:max-w-md rounded-sm bg-white/90 p-10 shadow-2xl shadow-[#0A1128]/5 border border-black/5"
       >
         <BrandHeader
           onRegisterElement={(element) => {
@@ -122,31 +121,27 @@ export default function Home() {
           }}
         />
 
-        {user ? (
-          <SessionPanel user={user} />
-        ) : (
-          <LoginForm
-            email={email}
-            password={password}
-            isSubmitting={isSubmitting}
-            showPassword={showPassword}
-            errorMessage={errorMessage}
-            formRef={formRef}
-            onSubmit={handleSubmit}
-            onEmailChange={(event) => setEmail(event.target.value)}
-            onPasswordChange={(event) => setPassword(event.target.value)}
-            onTogglePassword={() => setShowPassword((prev) => !prev)}
-            onRegisterEmailField={(element) => {
-              elementsRef.current[1] = element;
-            }}
-            onRegisterPasswordField={(element) => {
-              elementsRef.current[2] = element;
-            }}
-            onRegisterSubmitButton={(element) => {
-              elementsRef.current[3] = element;
-            }}
-          />
-        )}
+        <LoginForm
+          email={email}
+          password={password}
+          isSubmitting={isSubmitting}
+          showPassword={showPassword}
+          errorMessage={errorMessage}
+          formRef={formRef}
+          onSubmit={handleSubmit}
+          onEmailChange={(event) => setEmail(event.target.value)}
+          onPasswordChange={(event) => setPassword(event.target.value)}
+          onTogglePassword={() => setShowPassword((prev) => !prev)}
+          onRegisterEmailField={(element) => {
+            elementsRef.current[1] = element;
+          }}
+          onRegisterPasswordField={(element) => {
+            elementsRef.current[2] = element;
+          }}
+          onRegisterSubmitButton={(element) => {
+            elementsRef.current[3] = element;
+          }}
+        />
 
         <LoginFooter
           onRegisterElement={(element) => {
